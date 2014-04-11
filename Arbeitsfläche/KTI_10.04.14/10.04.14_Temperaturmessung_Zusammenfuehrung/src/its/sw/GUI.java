@@ -24,8 +24,9 @@ import javax.swing.SwingConstants;
 public class GUI extends javax.swing.JFrame implements Runnable{
 
   Socket client = null;
-  private double maxTemp;
-  private double minTemp;
+  private double maxTemp;                                                       // Zum Speichern der maximalen Temperatur
+  private double minTemp;                                                       // Zum Speichern der minimalen Temperatur
+  private DefaultListModel lstMdlAusgabe;                                       // Listmodel zur Ausgabe der empfangenen Daten
   
 
   /** Creates new form GUI */
@@ -35,16 +36,18 @@ public class GUI extends javax.swing.JFrame implements Runnable{
     lstAusgabe.setModel(lstMdlAusgabe);
   }
 
+  /**
+   * Diese Methode sendet ein Byte an den Microkontroller
+   * um die Messung zu starten.
+   */
   private void sendeDaten(String text) {
     try {
         client = new Socket(txtIPAdresse.getText(),
         Integer.parseInt(txtPort.getText()));
         OutputStream out = client.getOutputStream();
-        byte b = 1;                                                             // Sende ein byte an Microkontroller um messung zu starten
-        out.write(b);                                                           // Sende das byte
+        byte b = 1;                                                             
+        out.write(b);                                                           
         out.flush();
-//      out.close();
-//      client.close();
     }
     
     catch (UnknownHostException ex) {
@@ -55,27 +58,32 @@ public class GUI extends javax.swing.JFrame implements Runnable{
     }
   }
 
-  private String empfangeDaten() throws TempraturException {
+  /**
+   * Diese Methode ist für das Empfangen der Messungsdaten vom Microkontroller
+   * verantwortlich. Die empfangenen Daten, aus dem Imputstream, werden in ein
+   * Byte-Array eingelesen.
+   * Anschließend wird das erste Byte verundet, damit es wieder als "unsigned" 
+   * behandelt wird. Das zweite Byte wird nun um 8 Stellen nach links  
+   * verschoben.
+   * 
+   * Im Volgendem wird die Referenzspannung und Offset ausgelesen und die 
+   * Temperatur berechnet. Anschließend werden die minimum, maximum und aktuelle
+   * Temperatur ermittelt und gesetzt. Die aktuelle Temperatur wird als Value an
+   * die Progressbar (das Thermometer) gegeben. Zum Schluss wird der Imputstream
+   * wieder geschlossen.
+   * 
+   * @return
+   * @throws TemperaturException 
+   */
+  private String empfangeDaten() throws TemperaturException {
     String empfang = null;
     try {
-     // Socket client = new Socket(txtIPAdresse.getText(),
-   //  Integer.parseInt(txtPort.getText()));
-         
       InputStream in = client.getInputStream(); 
-     
-       //System.out.println(in);
-     while(in.available() == 0); //evtl. auf Daten warten
+     while(in.available() == 0);
       byte[] daten = new byte[2]; 
        in.read(daten);
-
-            System.out.println(daten[0]);
-            System.out.println(daten[1]);
       int adc = daten[0] & 0xff;
-         //   System.out.println(daten[1]);
-          //  System.out.println(adc);
       adc += daten[1]<<8;
-            //System.out.println(daten[0]);
-           // System.out.println(adc);
       
       double uRef = Double.parseDouble(uRefURef.getText());
       double uOffset = Double.parseDouble(offsetURef.getText());
@@ -92,6 +100,7 @@ public class GUI extends javax.swing.JFrame implements Runnable{
       double gerundet = adcD /1000.;
       gerundet = (gerundet-1.375)/0.0225; //Berechnen der tatsächlichen Temperatur.
       gerundet =Math.round(gerundet*10000.)/10000.;
+      
       int maximum = (int)gerundet;
       jProgressBarTemp.setMaximum(100);
       jProgressBarTemp.setValue(maximum);
@@ -111,18 +120,12 @@ public class GUI extends javax.swing.JFrame implements Runnable{
       
       in.close();
       client.close();
-   //   System.out.print(adcD);
     } catch (UnknownHostException ex) {
       Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
     } catch (IOException ex) {
       Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
     }
-    
     aktuelleTemp.setText(empfang);
-    
-     
-    
-  
     return empfang;
   }
 
@@ -634,11 +637,7 @@ public class GUI extends javax.swing.JFrame implements Runnable{
     }// </editor-fold>//GEN-END:initComponents
 
   private void mehrfachMessungActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mehrfachMessungActionPerformed
-
-      GUI g = new GUI();
-      Thread t1 = new Thread(g);
-      t1.start();
-
+    starteMehrfachmessung();
   }//GEN-LAST:event_mehrfachMessungActionPerformed
 
     private void txtIPAdresseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtIPAdresseActionPerformed
@@ -658,23 +657,15 @@ public class GUI extends javax.swing.JFrame implements Runnable{
     }//GEN-LAST:event_uSensorUbatActionPerformed
 
     private void beendenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_beendenActionPerformed
-        System.exit(0);
+    System.exit(0);                                                             // Beendet das Programm.
     }//GEN-LAST:event_beendenActionPerformed
 
     private void messungLoeschenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_messungLoeschenActionPerformed
-        lstMdlAusgabe.clear();
+    lstMdlAusgabe.clear();                                                      // Löscht die augegebenen Messdaten bzw. Temperaturen.
     }//GEN-LAST:event_messungLoeschenActionPerformed
 
     private void einzelMessungActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_einzelMessungActionPerformed
-
-    sendeDaten(txtIPAdresse.getText());
-      try {
-          lstMdlAusgabe.addElement(empfangeDaten()); 
-      } catch (TempraturException ex) {
-          Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-          showExceptionMessage(this, ex);
-      }
-    
+    starteEinfachmessung();
     }//GEN-LAST:event_einzelMessungActionPerformed
 
     private void aktuelleTempActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aktuelleTempActionPerformed
@@ -701,11 +692,108 @@ public class GUI extends javax.swing.JFrame implements Runnable{
     });
   }
   
-    public void showExceptionMessage(JFrame frame, TempraturException ex){
+  /**
+   * Diese Methode dient zum Anzeigen der jeweiligen TemperaturException.
+   * 
+   * @param frame
+   * @param ex 
+   */
+    public void showExceptionMessage(JFrame frame, TemperaturException ex){
         JOptionPane.showMessageDialog(frame, ex.getMessage());
     }
+    
+    /**
+     * Mit dieser Methode wird die Einfachmessung "angestoßen".
+     */
+    public void starteEinfachmessung(){
+            
+        sendeDaten(txtIPAdresse.getText());
+      try {
+          lstMdlAusgabe.addElement(empfangeDaten()); 
+      } catch (TemperaturException ex) {
+          Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+          showExceptionMessage(this, ex);
+      }
+    }
+    
+    /**
+     * Mit dieser Methode wird die Mehrfachmessung gestartet, in dem ein neue 
+     * Thread mit dem Objekt der Klasse GUI erstellt und durch den Aufruf 
+     * der Methode start(); gestartet wird. 
+     * Weiter geht es in der Methode run();, welche durch das Interface Runnable 
+     * implementiert wurde.
+     */
+    public void starteMehrfachmessung(){
+              
+      GUI g = new GUI();
+      Thread t1 = new Thread(g);
+      t1.start();
+    }
+
+  //<editor-fold defaultstate="collapsed" desc="Standart Getter- und Setter-Methoden">
+    /**
+     * @return the maxTemp
+     */
+    public double getMaxTemp() {
+        return maxTemp;
+    }
+    
+    /**
+     * @param maxTemp the maxTemp to set
+     */
+    public void setMaxTemp(double maxTemp) {
+        this.maxTemp = maxTemp;
+    }
+    
+    /**
+     * @return the minTemp
+     */
+    public double getMinTemp() {
+        return minTemp;
+    }
+    
+    /**
+     * @param minTemp the minTemp to set
+     */
+    public void setMinTemp(double minTemp) {
+        this.minTemp = minTemp;
+    }
+//</editor-fold>
+
+    /**
+     * In dieser Methode wird der gestartete Thread für die Mehrfachmessung 
+     * behandelt. Wie oft die Mehrfachmessung durchlaufen werden soll, 
+     * wird über den Spinner "mehrfachMessungSpinner" ausgelesen.
+     * Über das Textfeld "txtfSleepTime" kann die Intervallzeit eingestellt werden.
+     * Diese bestimmt, wie lange der Thread schlafen gelegt wird.
+     */
+    @Override
+    public void run() {
+        
+    Object h = mehrfachMessungSpinner.getValue();
+    String j= h.toString();
+    int k = Integer.parseInt(j);
+      for (int i = 0; i <k; i++) {
+          
+      long sekunden = Long.parseLong(txtfSleepTime.getText());
+      long millis = sekunden * 100;
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+      sendeDaten(txtIPAdresse.getText());
+        try {
+            lstMdlAusgabe.addElement(empfangeDaten());  
+        } catch (TemperaturException ex) {
+            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+            showExceptionMessage(this, ex);
+        }
+    
+      }
+    }
   
-  private DefaultListModel lstMdlAusgabe;                                       // Listmodel zur Ausgabe der empfangenen Daten
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField aktuelleTemp;
     private javax.swing.JButton beenden;
@@ -759,58 +847,4 @@ public class GUI extends javax.swing.JFrame implements Runnable{
     private javax.swing.JTextField uSensorUbat;
     // End of variables declaration//GEN-END:variables
 
-    /**
-     * @return the maxTemp
-     */
-    public double getMaxTemp() {
-        return maxTemp;
-    }
-
-    /**
-     * @param maxTemp the maxTemp to set
-     */
-    public void setMaxTemp(double maxTemp) {
-        this.maxTemp = maxTemp;
-    }
-
-    /**
-     * @return the minTemp
-     */
-    public double getMinTemp() {
-        return minTemp;
-    }
-
-    /**
-     * @param minTemp the minTemp to set
-     */
-    public void setMinTemp(double minTemp) {
-        this.minTemp = minTemp;
-    }
-
-    @Override
-    public void run() {
-        
-    Object h = mehrfachMessungSpinner.getValue();
-    String j= h.toString();
-    int k = Integer.parseInt(j);
-      for (int i = 0; i <k; i++) {
-          
-      long sekunden = Long.parseLong(txtfSleepTime.getText());
-      long millis = sekunden * 100;
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-      sendeDaten(txtIPAdresse.getText());
-        try {
-            lstMdlAusgabe.addElement(empfangeDaten());  
-        } catch (TempraturException ex) {
-            Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-            showExceptionMessage(this, ex);
-        }
-    
-      }
-    }
 }
