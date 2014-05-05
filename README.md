@@ -3,19 +3,19 @@
 ## Inhaltsverzeichnis
 [Einleitung](#einleitung)  
 [Das Projekt](#Das Projekt)  
-[Ist-Zustand](#Ist-Zustand)  
+[Ist-Zustand](#ist-zustand)  
 [Soll-Zustand](#soll-zustand)  
 [Mikrokontroller](#mikrokontroller)  
 [Aufbau](#aufbau)  
-[Probleme bei der Realisierung ](#Probleme bei der Realisierung)  
-[Defekter µController](#Defekter µController)  
+[Probleme](#probleme)  
+[Defekter-µController](#Defekter-µController)  
 
 ---
 
 ## Einleitung
 Im Auftrag des KTI-Unterrichts musste unsere Klasse FTI2 ein Projekt in mehreren Gruppen bearbeiten. Das Projekt sollte eine Temperaturmessung über das lokale Netzwerk ermöglichen. Dabei wird die Temperatur an einem Computer von einem Java Programm abgefragt.
 
-## Das Projekt
+## Projekt
 Unsere Aufgaben beinhaltet, eine Entwicklung des C-Programms für den Controller, die Weiterentwicklung eines bestehenden Java Programms zur abfrage von der Temperatur sowie die Einstellungen für das Temperatur-Mess-System. Unter anderem musste eine Dokumentation am ende des Projekts erstellt werden.
 
 ## Ist-Zustand
@@ -50,12 +50,12 @@ Der Aufbau des Projekts findet in dem Schulischen Labor der IT-Schule Stuttgart 
 ![lantronix](pictures/aufbau-lantronix.jpg "Lantronix")
 ![temperatursensor](pictures/aufbau-tempsensor.jpg "Temperatursensor")
 
-# Probleme bei der Realisierung 
+# Probleme
 
-## Inkompatible Datentypen
+## Inkompatible-Datentypen
 Die vom µController gesendeten Daten werden in Java falsch empfangen. Dadurch werden im Ausgabefeld völlig sinnlose Zahlen ausgegeben. Gelöst wurde das Problem indem der Stream als Byte statt Char empfangen und weiterverarbeitet wird.
 c-ausschnitt, java-ausschnitt
 
-## Defekter µController
+## Defekter-µController
 Die Temperaturmessung funktioniert im Debugmodus problemlos, sobald das C-Programm normal läuft erscheinen zufällige, ein- bis sechsstellige Zahlen.
 Nach vielen unterschiedlichen, fehlgeschlagenen Lösungsansätzen wurde der µController ausgetauscht.
