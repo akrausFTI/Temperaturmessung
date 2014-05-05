@@ -2,13 +2,13 @@
 
 ## Inhaltsverzeichnis
 [Einleitung](#einleitung)  
-[Das Projekt](#Das Projekt)  
+[Projekt](#projekt)  
 [Ist-Zustand](#ist-zustand)  
 [Soll-Zustand](#soll-zustand)  
 [Mikrokontroller](#mikrokontroller)  
 [Aufbau](#aufbau)  
 [Probleme](#probleme)  
-[Defekter-µController](#Defekter-µController)  
+[Defekter-µController](#defekter-µcontroller)  
 
 ---
 
